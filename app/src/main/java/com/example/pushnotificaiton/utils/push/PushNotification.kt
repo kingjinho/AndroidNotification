@@ -3,21 +3,27 @@ package com.example.pushnotificaiton.utils.push
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
+import android.renderscript.RenderScript
+import androidx.annotation.NonNull
+import androidx.annotation.Nullable
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.example.pushnotificaiton.MainActivity
+import com.example.pushnotificaiton.R
 
 /**
  * Created by KING JINHO on 2020-06-23
  */
 class PushNotification {
 
-    private var mSmallIcon : Int = 0
     private lateinit var mStyle: Notification.Style
-    private var mLargeIconRes: Int = 0
-    private lateinit var mTitle: String
-    private lateinit var mContent: String
 
     companion object {
         private lateinit var CHANNEL_ID: String
@@ -34,33 +40,48 @@ class PushNotification {
     fun createNotificationBuilder(channel_id: String): PushNotification {
         CHANNEL_ID = channel_id
         mNotificationBuilder = NotificationCompat.Builder(CONTEXT, channel_id)
-        mNotificationBuilder.setWhen(System.currentTimeMillis())
+        setDefaultTabAction()
         return this
     }
 
-    //only applies to api >= 26
-    fun createChannel(): PushNotification {
+    private fun setDefaultTabAction() {
+        val intent = Intent(CONTEXT, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(CONTEXT, 0, intent, 0)
+        mNotificationBuilder.setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+    }
+
+    //priority API < 26
+    //create channel and set channels importance if API >= 26
+    fun createChannel(name: String, descriptionText: String, importance: IMPORTANCE, priority: IMPORTANCE): PushNotification {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
             val notificationManager =
                 CONTEXT.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val name = "channel"
-            val descriptionText = "description"
-            val importance = NotificationManager.IMPORTANCE_HIGH
+            val importance = setImportance(importance)
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
             notificationManager.createNotificationChannel(channel)
+        } else {
+            mNotificationBuilder.priority = setPriority(priority)
         }
         return this
     }
 
-    fun notifyUser() {
-        mNotificationManagerCompat = NotificationManagerCompat.from(CONTEXT)
-        mNotificationManagerCompat.notify(1, mNotificationBuilder.build())
+    fun setSmallIcon(smallIconRes: Int): PushNotification {
+        mNotificationBuilder.setSmallIcon(smallIconRes)
+        return this
     }
 
-    fun setSmallIcon(smallIconRes : Int): PushNotification {
-        mNotificationBuilder.setSmallIcon(smallIconRes)
+    fun setTitle(titleRes: Int): PushNotification {
+        mNotificationBuilder.setContentTitle(CONTEXT.getString(titleRes))
+        return this
+    }
+
+    fun setContent(content: Int): PushNotification {
+        mNotificationBuilder.setContentText(CONTEXT.getText(content))
         return this
     }
 
@@ -73,26 +94,65 @@ class PushNotification {
         return this
     }
 
-    fun setContent(content: Int) {
-        mNotificationBuilder.setContentText(CONTEXT.getText(content))
-    }
-
-    fun setTitle(titleRes: Int): PushNotification {
-        mNotificationBuilder.setContentTitle(CONTEXT.getString(titleRes))
-        return this
-    }
-
     fun setLargeIcon(largeIconRes: Int): PushNotification {
-        mLargeIconRes = largeIconRes
+        val bitmap = BitmapFactory.decodeResource(CONTEXT.resources, largeIconRes)
+        mNotificationBuilder.setLargeIcon(bitmap)
         return this
     }
 
-    fun setExpandable(yesOrNo: Boolean) : PushNotification {
+    fun setExpandable(@NonNull yesOrNo: Boolean, @Nullable picture: Int): PushNotification {
+        val bitmap = BitmapFactory.decodeResource(CONTEXT.resources, picture)
         if (yesOrNo) {
-            return this
+            mNotificationBuilder.setStyle(
+                NotificationCompat.BigPictureStyle().bigLargeIcon(null).bigPicture(bitmap)
+            )
         }
         return this
     }
 
+    fun setActionButton(btnTitle: String): PushNotification {
+        val intent = Intent(CONTEXT, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(CONTEXT, 0, intent, 0)
+        mNotificationBuilder.addAction(R.drawable.ic_launcher_playstore, btnTitle, pendingIntent)
+        return this
+    }
 
+
+    fun notifyUser() {
+        mNotificationManagerCompat = NotificationManagerCompat.from(CONTEXT)
+        mNotificationManagerCompat.notify(1, mNotificationBuilder.build())
+    }
+
+
+    private fun setImportance(importance: IMPORTANCE) : Int {
+        return when (importance) {
+            IMPORTANCE.LOW ->  NotificationManager.IMPORTANCE_LOW
+            IMPORTANCE.DEFAULT ->  NotificationManager.IMPORTANCE_DEFAULT
+            IMPORTANCE.HIGH ->  NotificationManager.IMPORTANCE_HIGH
+            IMPORTANCE.MAX ->  NotificationManager.IMPORTANCE_MAX
+            IMPORTANCE.MIN ->  NotificationManager.IMPORTANCE_MIN
+            IMPORTANCE.NONE ->  NotificationManager.IMPORTANCE_NONE
+        }
+    }
+
+    private fun setPriority(priority: IMPORTANCE): Int {
+        return when (priority) {
+            IMPORTANCE.LOW ->  NotificationCompat.PRIORITY_LOW
+            IMPORTANCE.HIGH ->  NotificationCompat.PRIORITY_HIGH
+            IMPORTANCE.MAX ->  NotificationCompat.PRIORITY_MAX
+            IMPORTANCE.MIN ->  NotificationCompat.PRIORITY_MIN
+            else ->  NotificationCompat.PRIORITY_DEFAULT
+        }
+    }
+
+    enum class IMPORTANCE {
+        LOW,
+        DEFAULT,
+        HIGH,
+        MAX,
+        MIN,
+        NONE
+    }
 }
