@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Push Notificaiton</string>
+    <string name="common_random">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut volutpat vel felis sed ultrices. Sed dictum ultricies purus. Nulla et felis at quam finibus dignissim. Etiam id venenatis lectus. Vivamus eget arcu sit amet nunc elementum placerat et non ex. Aliquam viverra cursus mi, sit amet venenatis purus sodales ac. Integer et ipsum vel dolor pulvinar porta eu egestas ligula.
+            Nam malesuada eros a metus pretium, vel consequat metus sollicitudin. Mauris volutpat condimentum sapien, </string>
+    <string name="notification_basic">Basic Notification</string>
+    <string name="notification_with_big_picture">Notification With Big Picture</string>
+    <string name="notification_with_button">Notification With Action Button</string>
+    <string name="notification_with_large_block_of_text">Notification with Large Block of Text</string>
+    <string name="notification_with_picture_button">Notification with Picture, Button</string>
 </resources>
